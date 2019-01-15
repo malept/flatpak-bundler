@@ -21,14 +21,12 @@
   },
   "dependencies": {
     "debug": "^4.1.1",
-    "es6-promisify": "^5.0.0",
-    "fs-extra": "^0.30.0",
+    "fs-extra": "^7.0.1",
     "lodash": "^4.16.2",
-    "tmp": "0.0.29"
+    "tmp-promise": "^1.0.5"
   },
   "devDependencies": {
     "mocha": "^5.2.0",
-    "rimraf": "^2.5.4",
     "standard": "^8.3.0"
   },
   "scripts": {
