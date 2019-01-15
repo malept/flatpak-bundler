@@ -3,6 +3,7 @@
 const _ = require('lodash')
 const childProcess = require('child_process')
 const fs = require('fs-extra')
+const nodeify = require('nodeify')
 const path = require('path')
 const tmp = require('tmp-promise')
 
@@ -273,7 +274,7 @@ exports.bundle = function (manifest, options, callback) {
   options = kebabify(options)
   if (manifest['app-id']) manifest['id'] = manifest['app-id']
 
-  return ensureWorkingDir(options)
+  const promise = ensureWorkingDir(options)
     .then(() => {
       options = getOptionsWithDefaults(options, manifest)
       options.arch = flatpakifyArch(options.arch)
@@ -292,9 +293,7 @@ exports.bundle = function (manifest, options, callback) {
     .then(() => copyExports(options, manifest))
     .then(() => flatpakBuildExport(options, manifest))
     .then(() => flatpakBuildBundle(options, manifest))
-    .then(function () {
-      callback(null, options)
-    }, function (error) {
-      callback(error)
-    })
+    .then(() => options)
+
+  return nodeify(promise, callback)
 }
