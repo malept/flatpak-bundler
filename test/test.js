@@ -3,9 +3,8 @@
 const flatpakBundler = require('..')
 
 const assert = require('assert')
-const fs = require('fs')
+const fs = require('fs-extra')
 const path = require('path')
-const rimraf = require('rimraf')
 
 const outputPath = path.join(__dirname, 'out')
 const refsPath = path.join(__dirname, '..', 'refs')
@@ -17,12 +16,12 @@ describe('flatpak-bundler', function () {
   describe('bundle', function () {
     this.timeout(30000)
 
-    beforeEach(function (done) {
-      rimraf(outputPath, done)
-      fs.mkdirSync(outputPath)
-      fs.writeFileSync(binPath,
-      `#!/bin/bash
-      echo "Hello, world!"`, { mode: 0o755 })
+    beforeEach(() => {
+      return fs.remove(outputPath)
+        .then(() => fs.ensureDir(outputPath))
+        .then(() => fs.outputFile(binPath,
+          `#!/bin/bash
+          echo "Hello, world!"`, { mode: 0o755 }))
     })
 
     it('creates a flatpak', function (done) {
@@ -83,8 +82,6 @@ describe('flatpak-bundler', function () {
       })
     })
 
-    afterEach(function (done) {
-      rimraf(outputPath, done)
-    })
+    afterEach(() => fs.remove(outputPath))
   })
 })

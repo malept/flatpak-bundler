@@ -3,17 +3,12 @@
 const _ = require('lodash')
 const childProcess = require('child_process')
 const fs = require('fs-extra')
+const nodeify = require('nodeify')
 const path = require('path')
+const tmp = require('tmp-promise')
 
 const pkg = require('./package.json')
 const logger = require('debug')(pkg.name)
-
-const promisify = require('es6-promisify')
-const writeFile = promisify(fs.writeFile)
-const mkdirs = promisify(fs.mkdirs)
-const copy = promisify(fs.copy)
-const symlink = promisify(fs.symlink)
-const tmpdir = promisify(require('tmp').dir)
 
 function kebabify (object) {
   return _.cloneDeepWith(object, (value) => {
@@ -151,17 +146,17 @@ function ensureBase (options, manifest) {
 
 function ensureWorkingDir (options) {
   if (!options['working-dir']) {
-    return tmpdir({ dir: '/var/tmp', unsafeCleanup: options['clean-tmpdirs'] })
+    return tmp.dir({ dir: '/var/tmp', unsafeCleanup: options['clean-tmpdirs'] })
       .then(function (dir) {
-        options['working-dir'] = dir
+        options['working-dir'] = dir.path
       })
   } else {
-    return mkdirs(options['working-dir'])
+    return fs.ensureDir(options['working-dir'])
   }
 }
 
 function writeJsonFile (options, manifest) {
-  return writeFile(options['manifest-path'], JSON.stringify(manifest, null, '  '))
+  return fs.writeFile(options['manifest-path'], JSON.stringify(manifest, null, '  '))
 }
 
 function copyFiles (options, manifest) {
@@ -174,9 +169,9 @@ function copyFiles (options, manifest) {
     if (!_.endsWith(dir, path.sep)) dir = path.dirname(dir)
 
     logger(`Copying ${source} to ${dest}`)
-    return mkdirs(dir)
+    return fs.ensureDir(dir)
       .then(function () {
-        return copy(source, dest)
+        return fs.copy(source, dest)
       })
   })
   return Promise.all(copies)
@@ -191,9 +186,9 @@ function createSymlinks (options, manifest) {
     let dir = path.dirname(dest)
 
     logger(`Symlinking ${target} at ${dest}`)
-    return mkdirs(dir)
+    return fs.ensureDir(dir)
       .then(function () {
-        symlink(target, dest)
+        fs.symlink(target, dest)
       })
   })
   return Promise.all(links)
@@ -208,9 +203,9 @@ function copyExports (options, manifest) {
     source = path.join(options['build-dir'], 'files', source)
 
     logger(`Exporting ${source} to ${dest}`)
-    return mkdirs(dir)
+    return fs.ensureDir(dir)
       .then(function () {
-        return copy(source, dest)
+        return fs.copy(source, dest)
       })
   })
   return Promise.all(copies)
@@ -268,7 +263,7 @@ function flatpakBuildBundle (options, manifest) {
   args.push(options['bundle-path'])
   args.push(manifest['id'])
   if (manifest['branch']) args.push(manifest['branch'])
-  return mkdirs(path.dirname(options['bundle-path']))
+  return fs.ensureDir(path.dirname(options['bundle-path']))
     .then(function () {
       return spawnWithLogging(options, 'flatpak', args)
     })
@@ -279,7 +274,7 @@ exports.bundle = function (manifest, options, callback) {
   options = kebabify(options)
   if (manifest['app-id']) manifest['id'] = manifest['app-id']
 
-  return ensureWorkingDir(options)
+  const promise = ensureWorkingDir(options)
     .then(() => {
       options = getOptionsWithDefaults(options, manifest)
       options.arch = flatpakifyArch(options.arch)
@@ -298,9 +293,7 @@ exports.bundle = function (manifest, options, callback) {
     .then(() => copyExports(options, manifest))
     .then(() => flatpakBuildExport(options, manifest))
     .then(() => flatpakBuildBundle(options, manifest))
-    .then(function () {
-      callback(null, options)
-    }, function (error) {
-      callback(error)
-    })
+    .then(() => options)
+
+  return nodeify(promise, callback)
 }
