@@ -14,7 +14,7 @@ function kebabify (object) {
   return _.cloneDeepWith(object, (value) => {
     if (!value || typeof value !== 'object') return value
 
-    return Object.keys(value).reduce(function (newValue, key) {
+    return Object.keys(value).reduce((newValue, key) => {
       newValue[_.kebabCase(key)] = value[key]
       return newValue
     }, {})
@@ -52,7 +52,7 @@ function getOptionsWithDefaults (options, manifest) {
 }
 
 function spawnWithLogging (options, command, args, allowFail) {
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     logger(`$ ${command} ${args.join(' ')}`)
     let child = childProcess.spawn(command, args, { cwd: options['working-dir'] })
     child.stdout.on('data', (data) => {
@@ -95,7 +95,7 @@ function ensureRef (options, flatpakref, id, version) {
 
   logger(`Checking for install of ${id}`)
   return Promise.all([checkInstalled(true), checkInstalled(false)])
-    .then(function (checkResults) {
+    .then(checkResults => {
       let userInstall = checkResults[0]
       let systemInstall = checkResults[1]
       if (!userInstall && !systemInstall) {
@@ -147,7 +147,7 @@ function ensureBase (options, manifest) {
 function ensureWorkingDir (options) {
   if (!options['working-dir']) {
     return tmp.dir({ dir: '/var/tmp', unsafeCleanup: options['clean-tmpdirs'] })
-      .then(function (dir) {
+      .then(dir => {
         options['working-dir'] = dir.path
       })
   } else {
@@ -162,7 +162,7 @@ function writeJsonFile (options, manifest) {
 function copyFiles (options, manifest) {
   if (!manifest['files']) return
 
-  let copies = manifest['files'].map(function (sourceDest) {
+  let copies = manifest['files'].map(sourceDest => {
     let source = path.resolve(sourceDest[0])
     let dest = path.join(options['build-dir'], 'files', sourceDest[1])
     let dir = dest
@@ -170,9 +170,7 @@ function copyFiles (options, manifest) {
 
     logger(`Copying ${source} to ${dest}`)
     return fs.ensureDir(dir)
-      .then(function () {
-        return fs.copy(source, dest)
-      })
+      .then(() => fs.copy(source, dest))
   })
   return Promise.all(copies)
 }
@@ -180,16 +178,14 @@ function copyFiles (options, manifest) {
 function createSymlinks (options, manifest) {
   if (!manifest['symlinks']) return
 
-  let links = manifest['symlinks'].map(function (targetDest) {
+  let links = manifest['symlinks'].map(targetDest => {
     let target = path.join('/app', targetDest[0])
     let dest = path.join(options['build-dir'], 'files', targetDest[1])
     let dir = path.dirname(dest)
 
     logger(`Symlinking ${target} at ${dest}`)
     return fs.ensureDir(dir)
-      .then(function () {
-        fs.symlink(target, dest)
-      })
+      .then(() => fs.symlink(target, dest))
   })
   return Promise.all(links)
 }
@@ -197,16 +193,14 @@ function createSymlinks (options, manifest) {
 function copyExports (options, manifest) {
   if (!manifest['extra-exports']) return
 
-  let copies = manifest['extra-exports'].map(function (source) {
+  let copies = manifest['extra-exports'].map(source => {
     let dest = path.join(options['build-dir'], 'export', source)
     let dir = path.dirname(dest)
     source = path.join(options['build-dir'], 'files', source)
 
     logger(`Exporting ${source} to ${dest}`)
     return fs.ensureDir(dir)
-      .then(function () {
-        return fs.copy(source, dest)
-      })
+      .then(() => fs.copy(source, dest))
   })
   return Promise.all(copies)
 }
@@ -215,7 +209,7 @@ function flatpakBuilder (options, manifest, finish) {
   let args = []
   addCommandLineOption(args, 'arch', options['arch'])
   addCommandLineOption(args, 'force-clean', true)
-  // If we are not compile anything, allow building without the platform and sdk
+  // If we are not compiling anything, allow building without the platform and sdk
   // installed. Allows automated builds on a minimal environment, for example.
   if (!manifest.modules || manifest.modules.length === 0) {
     addCommandLineOption(args, 'allow-missing-runtimes', true)
@@ -263,10 +257,9 @@ function flatpakBuildBundle (options, manifest) {
   args.push(options['bundle-path'])
   args.push(manifest['id'])
   if (manifest['branch']) args.push(manifest['branch'])
+
   return fs.ensureDir(path.dirname(options['bundle-path']))
-    .then(function () {
-      return spawnWithLogging(options, 'flatpak', args)
-    })
+    .then(() => spawnWithLogging(options, 'flatpak', args))
 }
 
 exports.bundle = function (manifest, options, callback) {
