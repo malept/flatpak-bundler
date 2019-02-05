@@ -156,7 +156,7 @@ function ensureWorkingDir (options) {
 }
 
 function writeJsonFile (options, manifest) {
-  return fs.writeFile(options['manifest-path'], JSON.stringify(manifest, null, '  '))
+  return fs.writeJson(options['manifest-path'], manifest, { space: '  ' })
 }
 
 function copyFiles (options, manifest) {
