@@ -1,5 +1,5 @@
 # @malept/flatpak-bundler [![Version](https://img.shields.io/npm/v/flatpak-bundler.svg)](https://www.npmjs.com/package/flatpak-bundler) [![Build Status](https://travis-ci.com/malept/flatpak-bundler.svg?branch=%40malept%2Fflatpak-bundler)](https://travis-ci.com/malept/flatpak-bundler)
-Build [flatpaks](http://flatpak.org/) from nodejs.
+Build [flatpaks](http://flatpak.org/) from Node.js.
 
 # Quick Start
 
@@ -8,7 +8,7 @@ Install `@malept/flatpak-bundler`.
 $ npm install @malept/flatpak-bundler -g
 ```
 
-[Build a flatpak with a node script](#hello-world).
+[Build a flatpak with a Node script](#hello-world).
 
 Install and run it!
 ```shell
@@ -18,7 +18,7 @@ Hello, world!
 ```
 
 ## Overview
-This modules allows building flatpaks programatically from Node. It requires
+This modules allows building flatpaks programmatically from Node. It requires
 flatpak >= 0.6.13 to be installed on your system.
 
 Under the hood, this is just a wrapper for the [flatpak-builder](http://flatpak.org/flatpak/flatpak-docs.html#flatpak-builder)
