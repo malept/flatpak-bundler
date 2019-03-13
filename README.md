@@ -18,44 +18,46 @@ Hello, world!
 ```
 
 ## Overview
-This modules allows building flatpaks programatically from node. It requires
+This modules allows building flatpaks programatically from Node. It requires
 flatpak >= 0.6.13 to be installed on your system.
 
 Under the hood, this is just a wrapper for the [flatpak-builder](http://flatpak.org/flatpak/flatpak-docs.html#flatpak-builder)
 tool with some extra sugar added.
 
-With `flatpak-builder` you specify a runtime, sandbox permissions and software
-modules to build into you application, and build a flatpak from start to finish.
+With `flatpak-builder`, you specify a runtime, sandbox permissions and software
+modules to build into your application, and build a flatpak from start to finish.
 This module provides a few additional features:
 
  - Supports auto installing flatpak runtime and app dependencies
  - Supports exporting directly to the a single file flatpak bundle
  - Supports easy copying files and creating symlinks directly in `/app`
 
-The latter is particularly useful for [electron](http://electron.atom.io/) and
-[nw.js](http://nwjs.io/) style node applications, which often create packages
+The latter is particularly useful for [Electron](http://electronjs.org/) and
+[nw.js](http://nwjs.io/) style Node applications, which often create packages
 from prebuilt binaries and do not attempt to follow an autotools-like
 [build api](https://github.com/cgwalters/build-api).
 
-This module should make it easy to plug flatpak support into a electron or nw.js
+This module should make it easy to plug flatpak support into an Electron or nw.js
 app packaging phase.
 
 ## Usage
 
-### bundle(manifest, buildOptions, callback)
+### bundle(manifest, buildOptions[, callback])
 
 `flatpak-bundler` provides a single method, `bundle`, which takes an app
-manifest, a build options object, and a completion callback.
+manifest, a build options object, and optionally, a completion callback.
+If a callback is not passed, it returns a Promise.
 
 Both the manifest and options objects support both camelCase and dash-separated
 variants of any option.
 
 The callback with be called with `callback(error, finalBuildOptions)` arguments.
-The finalBuildOptions contains the build options after default values have been
-applied. Useful to read out the workingDir, for example.
+The `finalBuildOptions` contains the build options after default values have been
+applied. Useful to read out the `workingDir`, for example.
 
 ### Manifest
-This matches the format for flatpak-builder app manifests, with a few extra
+
+This matches the format for `flatpak-builder` app manifests, with a few extra
 options added and camelCase variants supported. For complete documentation
 of the manifest format read the [flatpak-builder docs](http://flatpak.org/flatpak/flatpak-docs.html#flatpak-builder).
 
@@ -124,84 +126,81 @@ supported.
    [flatpak build-bundle](http://flatpak.org/flatpak/flatpak-docs.html#flatpak-build-bundle) command.
 
 ### Logging
-To turn on debugging output set the DEBUG environment variable
-```
+To turn on debugging output, set the DEBUG environment variable:
+
+```shell
 DEBUG=flatpak-bundler npm run my-flatpak-command
 ```
 
 ## Examples
 
-#### Hello world
+### Hello world
 
-```js
+```javascript
+const flatpakBundler = require('flatpak-bundler')
+const fs = require('fs-extra')
+
 // Write a hello world script to disk
-const fs = require('fs')
-fs.writeFileSync('hello',
+await fs.writeFile('hello',
 `#!/bin/bash
 echo "Hello, world!"`, { mode: 0o755 })
 
-// Make a flapak with it!
-const flatpakBundler = require('flatpak-bundler')
-flatpakBundler.bundle({
-  id: 'org.world.Hello',
-  runtime: 'org.freedesktop.Platform',
-  runtimeVersion: '1.4',
-  runtimeFlatpakref: 'https://raw.githubusercontent.com/endlessm/flatpak-bundler/master/refs/freedesktop-runtime-1.4.flatpakref',
-  sdk: 'org.freedesktop.Sdk',
-  files: [
+// Make a flatpak with it!
+try {
+  await flatpakBundler.bundle({
+    id: 'org.world.Hello',
+    runtime: 'org.freedesktop.Platform',
+    runtimeVersion: '1.4',
+    runtimeFlatpakref: 'https://raw.githubusercontent.com/endlessm/flatpak-bundler/master/refs/freedesktop-runtime-1.4.flatpakref',
+    sdk: 'org.freedesktop.Sdk',
+    files: [
     ['hello', '/bin/hello']
-  ]
-}, {
-  bundlePath: 'hello.flatpak'
-}, function (error) {
-  if (error) {
-    console.error('Error building flatpak', error)
-    return
-  }
+    ]
+  }, { bundlePath: 'hello.flatpak' })
   console.log('Flatpak built successfully')
-})
+} catch (error) {
+    console.error('Error building flatpak', error)
+}
 ```
 
-#### Electron app
+### Electron App
 
-```js
+```javascript
 const flatpakBundler = require('flatpak-bundler')
 
-flatpakBundler.bundle({ // Manifest
-  id: 'org.world.Hello',
-  base: 'io.atom.electron.BaseApp', // Electron base application
-  baseFlatpakref: 'https://s3-us-west-2.amazonaws.com/electron-flatpak.endlessm.com/electron-base-app-master.flatpakref', // So we can auto install the runtime
-  runtime: 'org.freedesktop.Platform', // Use the freedesktop runtime
-  runtimeVersion: '1.4',
-  runtimeFlatpakref: 'https://raw.githubusercontent.com/endlessm/flatpak-bundler/master/refs/freedesktop-runtime-1.4.flatpakref',
-  sdk: 'org.freedesktop.Sdk',
-  files: [
-    [ 'static/linux', '/share/' ], // Desktop file and icons
-    [ packagedFileDir, '/share/bar' ] // Application binaries and assets
-  ],
-  symlinks: [
-    [ '/share/bar/Bar', '/bin/Bar' ] // Create a symlink in /bin to to app executable
-  ],
-  finishArgs: [
-    '--share=ipc', '--socket=x11', // Allow app to show windows with X11
-    '--socket=pulseaudio', // Allow audio output
-    '--filesystem=home', // Allow access to users home directory
-    '--share=network', // Allow network access
-    '--device=dri' // Allow OpenGL rendering
-  ],
-  renameDesktopFile: 'hello.desktop', // Rename the desktop file to agree with the app id so flatpak will export it
-  renameIcon: 'hello' // Rename the icon to agree with the app id so flatpak will export it
-}, { // Build options
-  arch: 'x86_64',
-  bundlePath: 'dist/hello_x86_64.flatpak',
-  gpgSign: '1234ABCD' // Gpg key to sign with
-}, function (error, finalAppOptions, finalBuildOptions) { // Callback
-  if (error) {
-    console.error('Error building flatpak')
-    console.error(error)
-    return
-  }
+try {
+  const finalBuildOptions = await flatpakBundler.bundle({ // Manifest
+    id: 'org.world.Hello',
+    base: 'io.atom.electron.BaseApp', // Electron base application
+    baseFlatpakref: 'https://s3-us-west-2.amazonaws.com/electron-flatpak.endlessm.com/electron-base-app-master.flatpakref', // So we can auto install the runtime
+    runtime: 'org.freedesktop.Platform', // Use the freedesktop runtime
+    runtimeVersion: '1.4',
+    runtimeFlatpakref: 'https://raw.githubusercontent.com/endlessm/flatpak-bundler/master/refs/freedesktop-runtime-1.4.flatpakref',
+    sdk: 'org.freedesktop.Sdk',
+    files: [
+      [ 'static/linux', '/share/' ], // Desktop file and icons
+      [ packagedFileDir, '/share/bar' ] // Application binaries and assets
+    ],
+    symlinks: [
+      [ '/share/bar/Bar', '/bin/Bar' ] // Create a symlink in /bin to to app executable
+    ],
+    finishArgs: [
+      '--share=ipc', '--socket=x11', // Allow app to show windows with X11
+      '--socket=pulseaudio', // Allow audio output
+      '--filesystem=home', // Allow access to users home directory
+      '--share=network', // Allow network access
+      '--device=dri' // Allow OpenGL rendering
+    ],
+    renameDesktopFile: 'hello.desktop', // Rename the desktop file to agree with the app ID so flatpak will export it
+    renameIcon: 'hello' // Rename the icon to agree with the app ID so flatpak will export it
+  }, { // Build options
+    arch: 'x86_64',
+    bundlePath: 'dist/hello_x86_64.flatpak',
+    gpgSign: '1234ABCD' // GPG key to sign with
+  })
   console.log('Flatpak built successfully.')
-  console.log('Build dir and repo in ' + finalBuildOptions.workingDir)
-})
+  console.log(`Build dir and repo in ${finalBuildOptions.workingDir}`)
+} catch (error) {
+  console.error('Error building flatpak', error)
+}
 ```
