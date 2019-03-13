@@ -1,6 +1,6 @@
 {
   "name": "@malept/flatpak-bundler",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "A small utility for packing files in a flatpak.",
   "main": "index.js",
   "repository": {
