@@ -1,11 +1,11 @@
 {
-  "name": "flatpak-bundler",
+  "name": "@malept/flatpak-bundler",
   "version": "0.1.4",
   "description": "A small utility for packing files in a flatpak.",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/endlessm/flatpak-bundler.git"
+    "url": "git+https://github.com/malept/flatpak-bundler.git"
   },
   "keywords": [
     "flatpak"
@@ -13,9 +13,9 @@
   "author": "Matt Watson <mattdangerw@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/endlessm/flatpak-bundler/issues"
+    "url": "https://github.com/malept/flatpak-bundler/issues"
   },
-  "homepage": "https://github.com/endlessm/flatpak-bundler#readme",
+  "homepage": "https://github.com/malept/flatpak-bundler#readme",
   "engines": {
     "node": ">=6.0.0"
   },

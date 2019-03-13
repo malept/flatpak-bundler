@@ -1,11 +1,11 @@
-# flatpak-bundler [![Version](https://img.shields.io/npm/v/flatpak-bundler.svg)](https://www.npmjs.com/package/flatpak-bundler) [![Build Status](https://img.shields.io/travis/endlessm/flatpak-bundler/master.svg)](http://travis-ci.org/endlessm/flatpak-bundler)
+# @malept/flatpak-bundler [![Version](https://img.shields.io/npm/v/flatpak-bundler.svg)](https://www.npmjs.com/package/flatpak-bundler) [![Build Status](https://travis-ci.com/malept/flatpak-bundler.svg?branch=%40malept%2Fflatpak-bundler)](https://travis-ci.com/malept/flatpak-bundler)
 Build [flatpaks](http://flatpak.org/) from nodejs.
 
 # Quick Start
 
-Install flatpak-bundler.
+Install `@malept/flatpak-bundler`.
 ```shell
-$ npm install flatpak-bundler -g
+$ npm install @malept/flatpak-bundler -g
 ```
 
 [Build a flatpak with a node script](#hello-world).
@@ -44,7 +44,7 @@ app packaging phase.
 
 ### bundle(manifest, buildOptions[, callback])
 
-`flatpak-bundler` provides a single method, `bundle`, which takes an app
+`@malept/flatpak-bundler` provides a single method, `bundle`, which takes an app
 manifest, a build options object, and optionally, a completion callback.
 If a callback is not passed, it returns a Promise.
 
@@ -137,7 +137,7 @@ DEBUG=flatpak-bundler npm run my-flatpak-command
 ### Hello world
 
 ```javascript
-const flatpakBundler = require('flatpak-bundler')
+const flatpakBundler = require('@malept/flatpak-bundler')
 const fs = require('fs-extra')
 
 // Write a hello world script to disk
@@ -166,7 +166,7 @@ try {
 ### Electron App
 
 ```javascript
-const flatpakBundler = require('flatpak-bundler')
+const flatpakBundler = require('@malept/flatpak-bundler')
 
 try {
   const finalBuildOptions = await flatpakBundler.bundle({ // Manifest
