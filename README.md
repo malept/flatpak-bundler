@@ -19,7 +19,7 @@ Hello, world!
 
 ## Overview
 This modules allows building flatpaks programmatically from Node. It requires
-flatpak >= 0.6.13 to be installed on your system.
+Node 8 or above and flatpak >= 0.6.13 to be installed on your system.
 
 Under the hood, this is just a wrapper for the [flatpak-builder](http://flatpak.org/flatpak/flatpak-docs.html#flatpak-builder)
 tool with some extra sugar added.
@@ -42,18 +42,17 @@ app packaging phase.
 
 ## Usage
 
-### bundle(manifest, buildOptions[, callback])
+### bundle(manifest, buildOptions)
 
 `@malept/flatpak-bundler` provides a single method, `bundle`, which takes an app
-manifest, a build options object, and optionally, a completion callback.
-If a callback is not passed, it returns a Promise.
+manifest and a build options object. It returns a Promise.
 
 Both the manifest and options objects support both camelCase and dash-separated
 variants of any option.
 
-The callback with be called with `callback(error, finalBuildOptions)` arguments.
-The `finalBuildOptions` contains the build options after default values have been
-applied. Useful to read out the `workingDir`, for example.
+The promise is returned with a `finalBuildOptions` value. It contains the build
+options after default values have been applied. Useful to read out the
+`workingDir`, for example.
 
 ### Manifest
 

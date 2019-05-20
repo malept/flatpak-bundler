@@ -3,7 +3,6 @@
 const _ = require('lodash')
 const childProcess = require('child_process')
 const fs = require('fs-extra')
-const nodeify = require('nodeify')
 const path = require('path')
 const tmp = require('tmp-promise')
 
@@ -51,7 +50,7 @@ function getOptionsWithDefaults (options, manifest) {
   return options
 }
 
-function spawnWithLogging (options, command, args, allowFail) {
+async function spawnWithLogging (options, command, args, allowFail) {
   return new Promise((resolve, reject) => {
     logger(`$ ${command} ${args.join(' ')}`)
     let child = childProcess.spawn(command, args, { cwd: options['working-dir'] })
@@ -80,133 +79,131 @@ function addCommandLineOption (args, name, value) {
   if (value !== true) args.push(value)
 }
 
-function ensureRef (options, flatpakref, id, version) {
-  function checkInstalled (checkUser) {
-    let args = ['info']
-    addCommandLineOption(args, 'show-commit', true)
-    if (checkUser) {
-      addCommandLineOption(args, 'user', true)
-    } else {
-      addCommandLineOption(args, 'system', true)
-    }
-    args.push([id, options.arch, version].join('/'))
-    return spawnWithLogging(options, 'flatpak', args, true)
+async function checkInstalled (id, options, version, checkUser) {
+  const args = ['info']
+  addCommandLineOption(args, 'show-commit', true)
+  addCommandLineOption(args, checkUser ? 'user' : 'system', true)
+  args.push([id, options.arch, version].join('/'))
+  return spawnWithLogging(options, 'flatpak', args, true)
+}
+
+async function ensureRef (options, manifest, type, version) {
+  const flatpakref = manifest[`${type}-flatpakref`]
+  const id = manifest[type]
+  if (!options[`auto-install-${type}`]) {
+    return
   }
+  logger(`Ensuring ${type} is up to date`)
 
   logger(`Checking for install of ${id}`)
-  return Promise.all([checkInstalled(true), checkInstalled(false)])
-    .then(checkResults => {
-      let userInstall = checkResults[0]
-      let systemInstall = checkResults[1]
-      if (!userInstall && !systemInstall) {
-        logger(`No install of ${id} found, trying to install from ${flatpakref}`)
-        if (!flatpakref) throw new Error(`Cannot install ${id} without flatpakref`)
-        let args = ['install']
-        addCommandLineOption(args, 'user', true)
-        addCommandLineOption(args, 'no-deps', true)
-        addCommandLineOption(args, 'arch', options['arch'])
-        addCommandLineOption(args, 'from', flatpakref)
-        return spawnWithLogging(options, 'flatpak', args)
-      }
+  const [userInstall, systemInstall] = await Promise.all([
+    checkInstalled(id, options, version, true),
+    checkInstalled(id, options, version, false)
+  ])
+  if (!userInstall && !systemInstall) {
+    logger(`No install of ${id} found, trying to install from ${flatpakref}`)
+    if (!flatpakref) {
+      throw new Error(`Cannot install ${id} without flatpakref`)
+    }
+    const args = ['install']
+    addCommandLineOption(args, 'user', true)
+    addCommandLineOption(args, 'no-deps', true)
+    addCommandLineOption(args, 'arch', options['arch'])
+    addCommandLineOption(args, 'from', flatpakref)
+    return spawnWithLogging(options, 'flatpak', args)
+  }
 
-      logger(`Found install of ${id}, trying to update`)
-      let args = ['update']
-      if (userInstall) addCommandLineOption(args, 'user', true)
-      addCommandLineOption(args, 'no-deps', true)
-      addCommandLineOption(args, 'arch', options['arch'])
-      args.push(id)
-      if (version) args.push(version)
-      return spawnWithLogging(options, 'flatpak', args)
-    })
+  logger(`Found install of ${id}, trying to update`)
+  const args = ['update']
+  if (userInstall) {
+    addCommandLineOption(args, 'user', true)
+  }
+  addCommandLineOption(args, 'no-deps', true)
+  addCommandLineOption(args, 'arch', options['arch'])
+  args.push(id)
+  if (version) {
+    args.push(version)
+  }
+  return spawnWithLogging(options, 'flatpak', args)
 }
 
-function ensureRuntime (options, manifest) {
-  if (!options['auto-install-runtime']) return
-
-  logger('Ensuring runtime is up to date')
-  return ensureRef(options, manifest['runtime-flatpakref'],
-    manifest['runtime'], manifest['runtime-version'])
+async function ensureRuntime (options, manifest) {
+  return ensureRef(options, manifest, 'runtime', manifest['runtime-version'])
 }
 
-function ensureSdk (options, manifest) {
-  if (!options['auto-install-sdk']) return
-
-  logger('Ensuring sdk is up to date')
-  return ensureRef(options, manifest['sdk-flatpakref'],
-    manifest['sdk'], manifest['runtime-version'])
+async function ensureSdk (options, manifest) {
+  return ensureRef(options, manifest, 'sdk', manifest['runtime-version'])
 }
 
-function ensureBase (options, manifest) {
-  if (!options['auto-install-base']) return
-
-  logger('Ensuring base app is up to date')
-  return ensureRef(options, manifest['base-flatpakref'],
-    manifest['base'], manifest['base-version'])
+async function ensureBase (options, manifest) {
+  return ensureRef(options, manifest, 'base', manifest['base-version'])
 }
 
-function ensureWorkingDir (options) {
+async function ensureWorkingDir (options) {
   if (!options['working-dir']) {
-    return tmp.dir({ dir: '/var/tmp', unsafeCleanup: options['clean-tmpdirs'] })
-      .then(dir => {
-        options['working-dir'] = dir.path
-      })
+    const dir = await tmp.dir({ dir: '/var/tmp', unsafeCleanup: options['clean-tmpdirs'] })
+    options['working-dir'] = dir.path
   } else {
     return fs.ensureDir(options['working-dir'])
   }
 }
 
-function writeJsonFile (options, manifest) {
+async function writeJsonFile (options, manifest) {
   return fs.writeJson(options['manifest-path'], manifest, { space: '  ' })
 }
 
-function copyFiles (options, manifest) {
-  if (!manifest['files']) return
+async function copyFiles (options, manifest) {
+  if (!manifest['files']) {
+    return
+  }
 
-  let copies = manifest['files'].map(sourceDest => {
-    let source = path.resolve(sourceDest[0])
-    let dest = path.join(options['build-dir'], 'files', sourceDest[1])
+  return Promise.all(manifest['files'].map(async sourceDest => {
+    const source = path.resolve(sourceDest[0])
+    const dest = path.join(options['build-dir'], 'files', sourceDest[1])
     let dir = dest
-    if (!_.endsWith(dir, path.sep)) dir = path.dirname(dir)
+    if (!dir.endsWith(path.sep)) {
+      dir = path.dirname(dir)
+    }
 
     logger(`Copying ${source} to ${dest}`)
-    return fs.ensureDir(dir)
-      .then(() => fs.copy(source, dest))
-  })
-  return Promise.all(copies)
+    await fs.ensureDir(dir)
+    await fs.copy(source, dest)
+  }))
 }
 
-function createSymlinks (options, manifest) {
-  if (!manifest['symlinks']) return
+async function createSymlinks (options, manifest) {
+  if (!manifest['symlinks']) {
+    return
+  }
 
-  let links = manifest['symlinks'].map(targetDest => {
-    let target = path.join('/app', targetDest[0])
-    let dest = path.join(options['build-dir'], 'files', targetDest[1])
-    let dir = path.dirname(dest)
+  return Promise.all(manifest['symlinks'].map(async ([targetPath, location]) => {
+    const target = path.join('/app', targetPath)
+    const dest = path.join(options['build-dir'], 'files', location)
 
     logger(`Symlinking ${target} at ${dest}`)
-    return fs.ensureDir(dir)
-      .then(() => fs.symlink(target, dest))
-  })
-  return Promise.all(links)
+    await fs.ensureDir(path.dirname(dest))
+    await fs.symlink(target, dest)
+  }))
 }
 
-function copyExports (options, manifest) {
-  if (!manifest['extra-exports']) return
+async function copyExports (options, manifest) {
+  if (!manifest['extra-exports']) {
+    return
+  }
 
-  let copies = manifest['extra-exports'].map(source => {
-    let dest = path.join(options['build-dir'], 'export', source)
-    let dir = path.dirname(dest)
+  return Promise.all(manifest['extra-exports'].map(async source => {
+    const dest = path.join(options['build-dir'], 'export', source)
+    const dir = path.dirname(dest)
     source = path.join(options['build-dir'], 'files', source)
 
     logger(`Exporting ${source} to ${dest}`)
-    return fs.ensureDir(dir)
-      .then(() => fs.copy(source, dest))
-  })
-  return Promise.all(copies)
+    await fs.ensureDir(dir)
+    await fs.copy(source, dest)
+  }))
 }
 
-function flatpakBuilder (options, manifest, finish) {
-  let args = []
+async function flatpakBuilder (options, manifest, finish) {
+  const args = []
   addCommandLineOption(args, 'arch', options['arch'])
   addCommandLineOption(args, 'force-clean', true)
   // If we are not compiling anything, allow building without the platform and sdk
@@ -226,8 +223,8 @@ function flatpakBuilder (options, manifest, finish) {
   return spawnWithLogging(options, 'flatpak-builder', args)
 }
 
-function flatpakBuildExport (options, manifest) {
-  let args = ['build-export']
+async function flatpakBuildExport (options, manifest) {
+  const args = ['build-export']
   addCommandLineOption(args, 'arch', options['arch'])
   addCommandLineOption(args, 'gpg-sign', options['gpg-sign'])
   addCommandLineOption(args, 'gpg-homedir', options['gpg-homedir'])
@@ -242,10 +239,12 @@ function flatpakBuildExport (options, manifest) {
   return spawnWithLogging(options, 'flatpak', args)
 }
 
-function flatpakBuildBundle (options, manifest) {
-  if (!options['bundle-path']) return
+async function flatpakBuildBundle (options, manifest) {
+  if (!options['bundle-path']) {
+    return
+  }
 
-  let args = ['build-bundle']
+  const args = ['build-bundle']
   addCommandLineOption(args, 'arch', options['arch'])
   addCommandLineOption(args, 'gpg-keys', options['gpg-keys'])
   addCommandLineOption(args, 'gpg-homedir', options['gpg-homedir'])
@@ -258,35 +257,31 @@ function flatpakBuildBundle (options, manifest) {
   args.push(manifest['id'])
   if (manifest['branch']) args.push(manifest['branch'])
 
-  return fs.ensureDir(path.dirname(options['bundle-path']))
-    .then(() => spawnWithLogging(options, 'flatpak', args))
+  await fs.ensureDir(path.dirname(options['bundle-path']))
+  return spawnWithLogging(options, 'flatpak', args)
 }
 
-exports.bundle = function (manifest, options, callback) {
+exports.bundle = async function (manifest, options) {
   manifest = kebabify(manifest)
   options = kebabify(options)
   if (manifest['app-id']) manifest['id'] = manifest['app-id']
 
-  const promise = ensureWorkingDir(options)
-    .then(() => {
-      options = getOptionsWithDefaults(options, manifest)
-      options.arch = flatpakifyArch(options.arch)
+  await ensureWorkingDir(options)
+  options = getOptionsWithDefaults(options, manifest)
+  options.arch = flatpakifyArch(options.arch)
 
-      logger(`Using manifest...\n${JSON.stringify(manifest, null, '  ')}`)
-      logger(`Using options...\n${JSON.stringify(options, null, '  ')}`)
-    })
-    .then(() => ensureRuntime(options, manifest))
-    .then(() => ensureSdk(options, manifest))
-    .then(() => ensureBase(options, manifest))
-    .then(() => writeJsonFile(options, manifest))
-    .then(() => flatpakBuilder(options, manifest, false))
-    .then(() => copyFiles(options, manifest))
-    .then(() => createSymlinks(options, manifest))
-    .then(() => flatpakBuilder(options, manifest, true))
-    .then(() => copyExports(options, manifest))
-    .then(() => flatpakBuildExport(options, manifest))
-    .then(() => flatpakBuildBundle(options, manifest))
-    .then(() => options)
-
-  return nodeify(promise, callback)
+  logger(`Using manifest...\n${JSON.stringify(manifest, null, '  ')}`)
+  logger(`Using options...\n${JSON.stringify(options, null, '  ')}`)
+  await ensureRuntime(options, manifest)
+  await ensureSdk(options, manifest)
+  await ensureBase(options, manifest)
+  await writeJsonFile(options, manifest)
+  await flatpakBuilder(options, manifest, false)
+  await copyFiles(options, manifest)
+  await createSymlinks(options, manifest)
+  await flatpakBuilder(options, manifest, true)
+  await copyExports(options, manifest)
+  await flatpakBuildExport(options, manifest)
+  await flatpakBuildBundle(options, manifest)
+  return options
 }

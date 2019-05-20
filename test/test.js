@@ -16,16 +16,17 @@ describe('flatpak-bundler', function () {
   describe('bundle', function () {
     this.timeout(30000)
 
-    beforeEach(() => {
-      return fs.remove(outputPath)
-        .then(() => fs.ensureDir(outputPath))
-        .then(() => fs.outputFile(binPath,
-          `#!/bin/bash
-          echo "Hello, world!"`, { mode: 0o755 }))
+    beforeEach(async () => {
+      await fs.remove(outputPath)
+      await fs.ensureDir(outputPath)
+      await fs.outputFile(binPath,
+        `#!/bin/bash
+        echo "Hello, world!"`, { mode: 0o755 }
+      )
     })
 
-    it('creates a flatpak', function (done) {
-      flatpakBundler.bundle({
+    it('creates a flatpak', async () => {
+      await flatpakBundler.bundle({
         id: 'org.world.Hello',
         runtime: 'org.freedesktop.Platform',
         runtimeVersion: '1.4',
@@ -36,15 +37,12 @@ describe('flatpak-bundler', function () {
         ]
       }, {
         bundlePath: flatpakPath
-      }, function (error) {
-        if (error) return done(error)
-        assert(fs.existsSync(flatpakPath))
-        done()
       })
+      assert(await fs.pathExists(flatpakPath))
     })
 
-    it('accepts dash variants', function (done) {
-      flatpakBundler.bundle({
+    it('accepts dash variants', async () => {
+      await flatpakBundler.bundle({
         'id': 'org.world.Hello',
         'runtime': 'org.freedesktop.Platform',
         'runtime-version': '1.4',
@@ -55,15 +53,12 @@ describe('flatpak-bundler', function () {
         ]
       }, {
         'bundle-path': flatpakPath
-      }, function (error) {
-        if (error) return done(error)
-        assert(fs.existsSync(flatpakPath))
-        done()
       })
+      assert(await fs.pathExists(flatpakPath))
     })
 
-    it('recognizes a node style arch', function (done) {
-      flatpakBundler.bundle({
+    it('recognizes a node style arch', async () => {
+      await flatpakBundler.bundle({
         id: 'org.world.Hello',
         runtime: 'org.freedesktop.Platform',
         runtimeVersion: '1.4',
@@ -75,13 +70,10 @@ describe('flatpak-bundler', function () {
       }, {
         arch: 'x64',
         bundlePath: flatpakPath
-      }, function (error) {
-        if (error) return done(error)
-        assert(fs.existsSync(flatpakPath))
-        done()
       })
+      assert(await fs.pathExists(flatpakPath))
     })
 
-    afterEach(() => fs.remove(outputPath))
+    afterEach(async () => fs.remove(outputPath))
   })
 })
