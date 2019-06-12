@@ -8,7 +8,7 @@ cache:
 
 env:
   global:
-  - DEBUG: @malept/flatpak-bundler
+  - DEBUG: "@malept/flatpak-bundler"
 
 before_install:
 - sudo add-apt-repository -y ppa:alexlarsson/flatpak
