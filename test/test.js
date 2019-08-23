@@ -43,12 +43,12 @@ describe('flatpak-bundler', function () {
 
     it('accepts dash variants', async () => {
       await flatpakBundler.bundle({
-        'id': 'org.world.Hello',
-        'runtime': 'org.freedesktop.Platform',
+        id: 'org.world.Hello',
+        runtime: 'org.freedesktop.Platform',
         'runtime-version': '1.4',
         'runtime-flatpakref': runtimeRefPath,
-        'sdk': 'org.freedesktop.Sdk',
-        'files': [
+        sdk: 'org.freedesktop.Sdk',
+        files: [
           [binPath, '/bin/hello']
         ]
       }, {

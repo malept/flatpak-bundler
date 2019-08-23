@@ -29,7 +29,7 @@ function flatpakifyArch (arch) {
 }
 
 function getOptionsWithDefaults (options, manifest) {
-  let defaults = {
+  const defaults = {
     'build-dir': path.join(options['working-dir'], 'build'),
     'repo-dir': path.join(options['working-dir'], 'repo'),
     'manifest-path': path.join(options['working-dir'], 'manifest.json'),
@@ -53,7 +53,7 @@ function getOptionsWithDefaults (options, manifest) {
 async function spawnWithLogging (options, command, args, allowFail) {
   return new Promise((resolve, reject) => {
     logger(`$ ${command} ${args.join(' ')}`)
-    let child = childProcess.spawn(command, args, { cwd: options['working-dir'] })
+    const child = childProcess.spawn(command, args, { cwd: options['working-dir'] })
     child.stdout.on('data', (data) => {
       logger(`1> ${data}`)
     })
@@ -108,7 +108,7 @@ async function ensureRef (options, manifest, type, version) {
     const args = ['install']
     addCommandLineOption(args, 'user', true)
     addCommandLineOption(args, 'no-deps', true)
-    addCommandLineOption(args, 'arch', options['arch'])
+    addCommandLineOption(args, 'arch', options.arch)
     addCommandLineOption(args, 'from', flatpakref)
     return spawnWithLogging(options, 'flatpak', args)
   }
@@ -119,7 +119,7 @@ async function ensureRef (options, manifest, type, version) {
     addCommandLineOption(args, 'user', true)
   }
   addCommandLineOption(args, 'no-deps', true)
-  addCommandLineOption(args, 'arch', options['arch'])
+  addCommandLineOption(args, 'arch', options.arch)
   args.push(id)
   if (version) {
     args.push(version)
@@ -153,11 +153,11 @@ async function writeJsonFile (options, manifest) {
 }
 
 async function copyFiles (options, manifest) {
-  if (!manifest['files']) {
+  if (!manifest.files) {
     return
   }
 
-  return Promise.all(manifest['files'].map(async sourceDest => {
+  return Promise.all(manifest.files.map(async sourceDest => {
     const source = path.resolve(sourceDest[0])
     const dest = path.join(options['build-dir'], 'files', sourceDest[1])
     let dir = dest
@@ -172,11 +172,11 @@ async function copyFiles (options, manifest) {
 }
 
 async function createSymlinks (options, manifest) {
-  if (!manifest['symlinks']) {
+  if (!manifest.symlinks) {
     return
   }
 
-  return Promise.all(manifest['symlinks'].map(async ([targetPath, location]) => {
+  return Promise.all(manifest.symlinks.map(async ([targetPath, location]) => {
     const target = path.join('/app', targetPath)
     const dest = path.join(options['build-dir'], 'files', location)
 
@@ -204,7 +204,7 @@ async function copyExports (options, manifest) {
 
 async function flatpakBuilder (options, manifest, finish) {
   const args = []
-  addCommandLineOption(args, 'arch', options['arch'])
+  addCommandLineOption(args, 'arch', options.arch)
   addCommandLineOption(args, 'force-clean', true)
   // If we are not compiling anything, allow building without the platform and sdk
   // installed. Allows automated builds on a minimal environment, for example.
@@ -225,17 +225,17 @@ async function flatpakBuilder (options, manifest, finish) {
 
 async function flatpakBuildExport (options, manifest) {
   const args = ['build-export']
-  addCommandLineOption(args, 'arch', options['arch'])
+  addCommandLineOption(args, 'arch', options.arch)
   addCommandLineOption(args, 'gpg-sign', options['gpg-sign'])
   addCommandLineOption(args, 'gpg-homedir', options['gpg-homedir'])
-  addCommandLineOption(args, 'subject', options['subject'])
-  addCommandLineOption(args, 'body', options['body'])
+  addCommandLineOption(args, 'subject', options.subject)
+  addCommandLineOption(args, 'body', options.body)
   if (options['build-runtime']) addCommandLineOption(args, 'runtime', true)
   args.concat(options['extra-flatpak-build-export-args'])
 
   args.push(options['repo-dir'])
   args.push(options['build-dir'])
-  if (manifest['branch']) args.push(manifest['branch'])
+  if (manifest.branch) args.push(manifest.branch)
   return spawnWithLogging(options, 'flatpak', args)
 }
 
@@ -245,7 +245,7 @@ async function flatpakBuildBundle (options, manifest) {
   }
 
   const args = ['build-bundle']
-  addCommandLineOption(args, 'arch', options['arch'])
+  addCommandLineOption(args, 'arch', options.arch)
   addCommandLineOption(args, 'gpg-keys', options['gpg-keys'])
   addCommandLineOption(args, 'gpg-homedir', options['gpg-homedir'])
   addCommandLineOption(args, 'repo-url', options['bundle-repo-url'])
@@ -254,8 +254,8 @@ async function flatpakBuildBundle (options, manifest) {
 
   args.push(options['repo-dir'])
   args.push(options['bundle-path'])
-  args.push(manifest['id'])
-  if (manifest['branch']) args.push(manifest['branch'])
+  args.push(manifest.id)
+  if (manifest.branch) args.push(manifest.branch)
 
   await fs.ensureDir(path.dirname(options['bundle-path']))
   return spawnWithLogging(options, 'flatpak', args)
@@ -264,7 +264,7 @@ async function flatpakBuildBundle (options, manifest) {
 exports.bundle = async function (manifest, options) {
   manifest = kebabify(manifest)
   options = kebabify(options)
-  if (manifest['app-id']) manifest['id'] = manifest['app-id']
+  if (manifest['app-id']) manifest.id = manifest['app-id']
 
   await ensureWorkingDir(options)
   options = getOptionsWithDefaults(options, manifest)
