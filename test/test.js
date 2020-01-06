@@ -29,7 +29,7 @@ describe('flatpak-bundler', function () {
       await flatpakBundler.bundle({
         id: 'org.world.Hello',
         runtime: 'org.freedesktop.Platform',
-        runtimeVersion: '1.4',
+        runtimeVersion: '1.6',
         runtimeFlatpakref: runtimeRefPath,
         sdk: 'org.freedesktop.Sdk',
         files: [
@@ -45,7 +45,7 @@ describe('flatpak-bundler', function () {
       await flatpakBundler.bundle({
         id: 'org.world.Hello',
         runtime: 'org.freedesktop.Platform',
-        'runtime-version': '1.4',
+        'runtime-version': '1.6',
         'runtime-flatpakref': runtimeRefPath,
         sdk: 'org.freedesktop.Sdk',
         files: [
@@ -61,7 +61,7 @@ describe('flatpak-bundler', function () {
       await flatpakBundler.bundle({
         id: 'org.world.Hello',
         runtime: 'org.freedesktop.Platform',
-        runtimeVersion: '1.4',
+        runtimeVersion: '1.6',
         runtimeFlatpakref: runtimeRefPath,
         sdk: 'org.freedesktop.Sdk',
         files: [

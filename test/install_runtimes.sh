@@ -17,6 +17,6 @@ install_flatpak() {
 flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
 for arch in i386 x86_64; do
-    install_runtime $arch org.freedesktop.Sdk 1.4
-    install_runtime $arch org.freedesktop.Platform 1.4
+    install_runtime $arch org.freedesktop.Sdk 1.6
+    install_runtime $arch org.freedesktop.Platform 1.6
 done
