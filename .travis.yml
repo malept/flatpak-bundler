@@ -7,7 +7,7 @@ cache:
   - $HOME/.local/share/flatpak
 branches:
   only:
-  - master
+  - @malept/flatpak-bundler
   - /^v\d+\.\d+\.\d+/
 
 env:
