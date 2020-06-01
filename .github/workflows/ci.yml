@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "@malept/flatpak-bundler"
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+*
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Flatpak cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.local/share/flatpak
+          key: flatpak
+      - name: Install Dependencies
+        run: |
+          sudo add-apt-repository -y ppa:alexlarsson/flatpak
+          sudo rm /etc/apt/sources.list.d/bazel.list
+          sudo apt update
+          sudo apt install --no-install-recommends -y flatpak-builder
+          ./test/install_runtimes.sh
+      - name: Flatpak Tooling Versions
+        run: |
+          flatpak --version
+          flatpak-builder --version
+      - name: NPM cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install
+        run: npm install --engine-strict
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm run mocha
+        env:
+          DEBUG: '@malept/flatpak-bundler'

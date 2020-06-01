@@ -30,6 +30,8 @@
     "standard": "^14.0.0"
   },
   "scripts": {
+    "lint": "standard",
+    "mocha": "mocha",
     "test": "standard && mocha"
   }
 }
