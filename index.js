@@ -141,7 +141,7 @@ async function ensureBase (options, manifest) {
 
 async function ensureWorkingDir (options) {
   if (!options['working-dir']) {
-    const dir = await tmp.dir({ dir: '/var/tmp', unsafeCleanup: options['clean-tmpdirs'] })
+    const dir = await tmp.dir({ prefix: 'flatpak-bundler', unsafeCleanup: options['clean-tmpdirs'] })
     options['working-dir'] = dir.path
   } else {
     return fs.ensureDir(options['working-dir'])
