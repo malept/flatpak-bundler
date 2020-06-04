@@ -30,13 +30,13 @@ describe('flatpak-bundler', function () {
         id: 'org.world.Hello',
         runtime: 'org.freedesktop.Platform',
         runtimeVersion: '1.6',
-        runtimeFlatpakref: runtimeRefPath,
-        sdk: 'org.freedesktop.Sdk',
+        sdk: 'org.freedesktop.Sdk'
+      }, {
+        bundlePath: flatpakPath,
         files: [
           [binPath, '/bin/hello']
-        ]
-      }, {
-        bundlePath: flatpakPath
+        ],
+        runtimeFlatpakref: runtimeRefPath
       })
       assert(await fs.pathExists(flatpakPath))
     })
@@ -46,13 +46,13 @@ describe('flatpak-bundler', function () {
         id: 'org.world.Hello',
         runtime: 'org.freedesktop.Platform',
         'runtime-version': '1.6',
-        'runtime-flatpakref': runtimeRefPath,
-        sdk: 'org.freedesktop.Sdk',
+        sdk: 'org.freedesktop.Sdk'
+      }, {
+        'bundle-path': flatpakPath,
         files: [
           [binPath, '/bin/hello']
-        ]
-      }, {
-        'bundle-path': flatpakPath
+        ],
+        'runtime-flatpakref': runtimeRefPath
       })
       assert(await fs.pathExists(flatpakPath))
     })
@@ -62,14 +62,14 @@ describe('flatpak-bundler', function () {
         id: 'org.world.Hello',
         runtime: 'org.freedesktop.Platform',
         runtimeVersion: '1.6',
-        runtimeFlatpakref: runtimeRefPath,
-        sdk: 'org.freedesktop.Sdk',
-        files: [
-          [binPath, '/bin/hello']
-        ]
+        sdk: 'org.freedesktop.Sdk'
       }, {
         arch: 'x64',
-        bundlePath: flatpakPath
+        bundlePath: flatpakPath,
+        files: [
+          [binPath, '/bin/hello']
+        ],
+        runtimeFlatpakref: runtimeRefPath
       })
       assert(await fs.pathExists(flatpakPath))
     })

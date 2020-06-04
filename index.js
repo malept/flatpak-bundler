@@ -37,9 +37,9 @@ function getOptionsWithDefaults (options, manifest) {
     'extra-flatpak-build-bundle-args': [],
     'extra-flatpak-build-export-args': [],
     'clean-tmpdirs': true,
-    'auto-install-runtime': typeof manifest['runtime-flatpakref'] !== 'undefined',
-    'auto-install-sdk': typeof manifest['sdk-flatpakref'] !== 'undefined',
-    'auto-install-base': typeof manifest['base-flatpakref'] !== 'undefined'
+    'auto-install-runtime': typeof options['runtime-flatpakref'] !== 'undefined',
+    'auto-install-sdk': typeof options['sdk-flatpakref'] !== 'undefined',
+    'auto-install-base': typeof options['base-flatpakref'] !== 'undefined'
   }
   options = _.defaults({}, options, defaults)
   options['working-dir'] = path.resolve(options['working-dir'])
@@ -88,7 +88,7 @@ async function checkInstalled (id, options, version, checkUser) {
 }
 
 async function ensureRef (options, manifest, type, version) {
-  const flatpakref = manifest[`${type}-flatpakref`]
+  const flatpakref = options[`${type}-flatpakref`]
   const id = manifest[type]
   if (!options[`auto-install-${type}`]) {
     return
@@ -153,11 +153,11 @@ async function writeJsonFile (options, manifest) {
 }
 
 async function copyFiles (options, manifest) {
-  if (!manifest.files) {
+  if (!options.files) {
     return
   }
 
-  return Promise.all(manifest.files.map(async sourceDest => {
+  return Promise.all(options.files.map(async sourceDest => {
     const source = path.resolve(sourceDest[0])
     const dest = path.join(options['build-dir'], 'files', sourceDest[1])
     let dir = dest
@@ -172,11 +172,11 @@ async function copyFiles (options, manifest) {
 }
 
 async function createSymlinks (options, manifest) {
-  if (!manifest.symlinks) {
+  if (!options.symlinks) {
     return
   }
 
-  return Promise.all(manifest.symlinks.map(async ([targetPath, location]) => {
+  return Promise.all(options.symlinks.map(async ([targetPath, location]) => {
     const target = path.join('/app', targetPath)
     const dest = path.join(options['build-dir'], 'files', location)
 
@@ -187,11 +187,11 @@ async function createSymlinks (options, manifest) {
 }
 
 async function copyExports (options, manifest) {
-  if (!manifest['extra-exports']) {
+  if (!options['extra-exports']) {
     return
   }
 
-  return Promise.all(manifest['extra-exports'].map(async source => {
+  return Promise.all(options['extra-exports'].map(async source => {
     const dest = path.join(options['build-dir'], 'export', source)
     const dir = path.dirname(dest)
     source = path.join(options['build-dir'], 'files', source)
