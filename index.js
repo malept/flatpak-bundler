@@ -216,7 +216,7 @@ async function flatpakBuilder (options, manifest, finish) {
   } else {
     addCommandLineOption(args, 'finish-only', true)
   }
-  args.concat(options['extra-flatpak-builder-args'])
+  args.push.apply(args, options['extra-flatpak-builder-args'])
 
   args.push(options['build-dir'])
   args.push(options['manifest-path'])
@@ -231,7 +231,7 @@ async function flatpakBuildExport (options, manifest) {
   addCommandLineOption(args, 'subject', options.subject)
   addCommandLineOption(args, 'body', options.body)
   if (options['build-runtime']) addCommandLineOption(args, 'runtime', true)
-  args.concat(options['extra-flatpak-build-export-args'])
+  args.push.apply(args, options['extra-flatpak-build-export-args'])
 
   args.push(options['repo-dir'])
   args.push(options['build-dir'])
@@ -250,7 +250,7 @@ async function flatpakBuildBundle (options, manifest) {
   addCommandLineOption(args, 'gpg-homedir', options['gpg-homedir'])
   addCommandLineOption(args, 'repo-url', options['bundle-repo-url'])
   if (options['build-runtime']) addCommandLineOption(args, 'runtime', true)
-  args.concat(options['extra-flatpak-build-bundle-args'])
+  args.push.apply(args, options['extra-flatpak-build-bundle-args'])
 
   args.push(options['repo-dir'])
   args.push(options['bundle-path'])
