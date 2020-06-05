@@ -4,10 +4,13 @@ const _ = require('lodash')
 const childProcess = require('child_process')
 const fs = require('fs-extra')
 const path = require('path')
+const { promisify } = require('util')
 const tmp = require('tmp-promise')
 
 const pkg = require('./package.json')
 const logger = require('debug')(pkg.name)
+
+const exec = promisify(childProcess.exec)
 
 function kebabify (object) {
   return _.cloneDeepWith(object, (value) => {
@@ -87,6 +90,27 @@ async function checkInstalled (id, options, version, checkUser) {
   return spawnWithLogging(options, 'flatpak', args, true)
 }
 
+let _flatpakBuilderVersion
+
+/**
+ * Get the flatpak-builder version in a comparable form (Array of Numbers).
+ */
+async function flatpakBuilderVersion () {
+  if (!_flatpakBuilderVersion) {
+    const versionString = _.last((await exec('flatpak-builder --version')).toString().split(' '))
+    _flatpakBuilderVersion = versionString.split('.').map(part => parseInt(part, 10))
+  }
+
+  return _flatpakBuilderVersion
+}
+
+async function addAssumeYesArg (args) {
+  if ((await flatpakBuilderVersion()) >= [0, 9, 9]) {
+    logger('flatpak-builder is new enough, adding --assumeyes')
+    addCommandLineOption(args, 'assumeyes', true)
+  }
+}
+
 async function ensureRef (options, manifest, type, version) {
   const flatpakref = options[`${type}-flatpakref`]
   const id = manifest[type]
@@ -109,6 +133,7 @@ async function ensureRef (options, manifest, type, version) {
     addCommandLineOption(args, 'user', true)
     addCommandLineOption(args, 'no-deps', true)
     addCommandLineOption(args, 'arch', options.arch)
+    await addAssumeYesArg(args)
     if (flatpakref.startsWith('app/') || flatpakref.startsWith('runtime/')) {
       args.push(flatpakref)
     } else {
@@ -119,11 +144,10 @@ async function ensureRef (options, manifest, type, version) {
 
   logger(`Found install of ${id}, trying to update`)
   const args = ['update']
-  if (userInstall) {
-    addCommandLineOption(args, 'user', true)
-  }
+  addCommandLineOption(args, 'user', userInstall)
   addCommandLineOption(args, 'no-deps', true)
   addCommandLineOption(args, 'arch', options.arch)
+  await addAssumeYesArg(args)
   args.push(id)
   if (version) {
     args.push(version)
@@ -220,6 +244,7 @@ async function flatpakBuilder (options, manifest, finish) {
   } else {
     addCommandLineOption(args, 'finish-only', true)
   }
+  await addAssumeYesArg(args)
   args.push.apply(args, options['extra-flatpak-builder-args'])
 
   args.push(options['build-dir'])
