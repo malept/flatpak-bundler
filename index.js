@@ -109,7 +109,11 @@ async function ensureRef (options, manifest, type, version) {
     addCommandLineOption(args, 'user', true)
     addCommandLineOption(args, 'no-deps', true)
     addCommandLineOption(args, 'arch', options.arch)
-    addCommandLineOption(args, 'from', flatpakref)
+    if (flatpakref.startsWith('app/') || flatpakref.startsWith('runtime/')) {
+      args.push(flatpakref)
+    } else {
+      addCommandLineOption(args, 'from', flatpakref)
+    }
     return spawnWithLogging(options, 'flatpak', args)
   }
 

@@ -74,6 +74,21 @@ describe('flatpak-bundler', function () {
       assert(await fs.pathExists(flatpakPath))
     })
 
+    it('installs a base if it does not exist', async () => {
+      await flatpakBundler.bundle({
+        id: 'org.world.Hello',
+        runtime: 'org.freedesktop.Platform',
+        runtimeVersion: '1.6',
+        sdk: 'org.freedesktop.Sdk'
+      }, {
+        arch: 'x64',
+        baseFlatpakref: 'app/org.electronjs.Electron2.BaseApp/x86_64/stable',
+        bundlePath: flatpakPath,
+        runtimeFlatpakref: runtimeRefPath
+      })
+      assert(await fs.pathExists(flatpakPath))
+    })
+
     afterEach(async () => fs.remove(outputPath))
   })
 })
