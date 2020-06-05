@@ -20,7 +20,7 @@ function kebabify (object) {
   })
 }
 
-function flatpakifyArch (arch) {
+function translateArch (arch) {
   if (arch === 'ia32') return 'i386'
   if (arch === 'x64') return 'x86_64'
   if (arch === 'amd64') return 'x86_64'
@@ -272,7 +272,7 @@ exports.bundle = async function (manifest, options) {
 
   await ensureWorkingDir(options)
   options = getOptionsWithDefaults(options, manifest)
-  options.arch = flatpakifyArch(options.arch)
+  options.arch = translateArch(options.arch)
 
   logger(`Using manifest...\n${JSON.stringify(manifest, null, '  ')}`)
   logger(`Using options...\n${JSON.stringify(options, null, '  ')}`)
@@ -289,3 +289,5 @@ exports.bundle = async function (manifest, options) {
   await flatpakBuildBundle(options, manifest)
   return options
 }
+
+exports.translateArch = translateArch

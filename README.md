@@ -44,8 +44,7 @@ app packaging phase.
 
 ### bundle(manifest, buildOptions)
 
-`@malept/flatpak-bundler` provides a single method, `bundle`, which takes an app
-manifest and a build options object. It returns a Promise.
+Takes an [app manifest](#manifest) and a build options object. It returns a Promise.
 
 Both the manifest and options objects support both camelCase and dash-separated
 variants of any option.
@@ -53,6 +52,12 @@ variants of any option.
 The promise is returned with a `finalBuildOptions` value. It contains the build
 options after default values have been applied. Useful to read out the
 `workingDir`, for example.
+
+### translateArch(arch)
+
+Used to translate a Node-style arch (e.g., `x64`) into a Flatpak-compatible arch (e.g., `x86_64`).
+
+If the arch is unknown, it will pass through the input value.
 
 ### Manifest
 
