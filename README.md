@@ -1,5 +1,5 @@
 # @malept/flatpak-bundler [![Version](https://img.shields.io/npm/v/@malept/flatpak-bundler.svg)](https://www.npmjs.com/package/@malept/flatpak-bundler) [![Build Status](https://travis-ci.com/malept/flatpak-bundler.svg?branch=%40malept%2Fflatpak-bundler)](https://travis-ci.com/malept/flatpak-bundler)
-Build [flatpaks](http://flatpak.org/) from Node.js.
+Build [flatpaks](https://flatpak.org/) from Node.js.
 
 # Quick Start
 
@@ -21,7 +21,7 @@ Hello, world!
 This modules allows building flatpaks programmatically from Node. It requires
 Node 10 or above and flatpak >= 0.6.13 to be installed on your system.
 
-Under the hood, this is just a wrapper for the [flatpak-builder](http://flatpak.org/flatpak/flatpak-docs.html#flatpak-builder)
+Under the hood, this is just a wrapper for the [flatpak-builder](https://docs.flatpak.org/en/latest/flatpak-builder.html)
 tool with some extra sugar added.
 
 With `flatpak-builder`, you specify a runtime, sandbox permissions and software
@@ -32,7 +32,7 @@ This module provides a few additional features:
  - Supports exporting directly to the a single file flatpak bundle
  - Supports easy copying files and creating symlinks directly in `/app`
 
-The latter is particularly useful for [Electron](http://electronjs.org/) and
+The latter is particularly useful for [Electron](https://electronjs.org/) and
 [nw.js](http://nwjs.io/) style Node applications, which often create packages
 from prebuilt binaries and do not attempt to follow an autotools-like
 [build api](https://github.com/cgwalters/build-api).
@@ -56,9 +56,9 @@ options after default values have been applied. Useful to read out the
 
 ### Manifest
 
-This matches the format for `flatpak-builder` app manifests, with a few extra
-options added and camelCase variants supported. For complete documentation
-of the manifest format read the [flatpak-builder docs](http://flatpak.org/flatpak/flatpak-docs.html#flatpak-builder).
+This matches the format for [`flatpak-builder` app
+manifests](https://docs.flatpak.org/en/latest/manifests.html), with a few extra
+options added and camelCase variants supported.
 
  - **id**: Required. The application id.
  - **runtime**: Required. The runtime for your flatpak application.
@@ -118,11 +118,11 @@ supported.
  - **bundleRepoUrl**: Repo url for the single file bundle. Installing the bundle
    will automatically configure a remote for this URL.
  - **extraFlatpakBuilderArgs**: List of extra arguments to pass to the
-   [flatpak-builder](http://flatpak.org/flatpak/flatpak-docs.html#flatpak-builder) command.
+   [flatpak-builder](https://docs.flatpak.org/en/latest/flatpak-builder-command-reference.html) command.
  - **extraFlatpakBuildExportArgs**: List of extra arguments to pass to the
-   [flatpak build-export](http://flatpak.org/flatpak/flatpak-docs.html#flatpak-build-export) command.
+   [flatpak build-export](https://docs.flatpak.org/en/latest/flatpak-command-reference.html#flatpak-build-export) command.
  - **extraFlatpakBuildBundleArgs**: List of extra arguments to pass to the
-   [flatpak build-bundle](http://flatpak.org/flatpak/flatpak-docs.html#flatpak-build-bundle) command.
+   [flatpak build-bundle](https://docs.flatpak.org/en/latest/flatpak-command-reference.html#flatpak-build-bundle) command.
 
 ### Logging
 To turn on debugging output, set the DEBUG environment variable:
