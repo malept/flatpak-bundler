@@ -1,4 +1,4 @@
-# @malept/flatpak-bundler [![Version](https://img.shields.io/npm/v/@malept/flatpak-bundler.svg)](https://www.npmjs.com/package/@malept/flatpak-bundler) [![Build Status](https://travis-ci.com/malept/flatpak-bundler.svg?branch=%40malept%2Fflatpak-bundler)](https://travis-ci.com/malept/flatpak-bundler)
+# @malept/flatpak-bundler [![Version](https://img.shields.io/npm/v/@malept/flatpak-bundler.svg)](https://www.npmjs.com/package/@malept/flatpak-bundler) [![Build Status](https://github.com/malept/flatpak-bundler/workflows/CI/badge.svg)](https://github.com/malept/flatpak-bundler/actions?query=workflow%3ACI)
 Build [flatpaks](https://flatpak.org/) from Node.js.
 
 # Quick Start
