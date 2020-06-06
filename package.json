@@ -26,6 +26,8 @@
     "tmp-promise": "^3.0.2"
   },
   "devDependencies": {
+    "husky": "^4.2.5",
+    "lint-staged": "^10.2.9",
     "mocha": "^7.0.0",
     "standard": "^14.0.0"
   },
@@ -33,5 +35,11 @@
     "lint": "standard",
     "mocha": "mocha",
     "test": "standard && mocha"
+  },
+  "husky": {
+    "pre-commit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.js": "standard --fix"
   }
 }
