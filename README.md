@@ -42,6 +42,12 @@ app packaging phase.
 
 ## Usage
 
+### translateArch(arch)
+
+Used to translate a Node-style arch (e.g., `x64`) into a Flatpak-compatible arch (e.g., `x86_64`).
+
+If the arch is unknown, it will pass through the input value.
+
 ### bundle(manifest, buildOptions)
 
 Takes an [app manifest](#manifest) and a build options object. It returns a Promise.
@@ -53,13 +59,7 @@ The promise is returned with a `finalBuildOptions` value. It contains the build
 options after default values have been applied. Useful to read out the
 `workingDir`, for example.
 
-### translateArch(arch)
-
-Used to translate a Node-style arch (e.g., `x64`) into a Flatpak-compatible arch (e.g., `x86_64`).
-
-If the arch is unknown, it will pass through the input value.
-
-### Manifest
+#### Manifest
 
 This matches the format for [`flatpak-builder` app
 manifests](https://docs.flatpak.org/en/latest/manifests.html), with a few extra
@@ -77,7 +77,7 @@ options added and camelCase variants supported.
    (anything not already in your runtime or base app), you can specify them
    here.
 
-### Build Options
+#### Build Options
 
  - **bundlePath**: Output location for a single file version of the flatpak. If
    non supplied, the single file flatpak will not be created.
