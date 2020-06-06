@@ -77,27 +77,8 @@ options added and camelCase variants supported.
    (anything not already in your runtime or base app), you can specify them
    here.
 
-In addition to standard manifest options, the following extra options are
-supported.
- - **files**: Files to copy directly into the app. Should be a list of [source,
-   dest] tuples. Source should be a relative/absolute path to a file/directory
-   to copy into the flatpak, and dest should be the path inside the app install
-   prefix (e.g. `/share/applications/`)
- - **symlinks**: Symlinks to create in the app files. Should be a list of
-   [target, location] symlink tuples. Target can be either a relative or
-   absolute path inside the app install prefix, and location should be a
-   absolute path inside the prefix to create the symlink at.
- - **extraExports**: Files to export outside of the flatpak sandbox, in addition
-   to the application desktop file, icons and appstream. File basename *must*
-   be prefixed with the app id. Should not be needed for common use.
- - **runtimeFlatpakref**: A pathname or url to a flatpakref file to use to auto
-   install the runtime.
- - **sdkFlatpakref**: A pathname or url to a flatpakref file to use to auto
-   install the sdk.
- - **baseFlatpakref**: A pathname or url to a flatpakref file to use to auto
-   install the base app.
-
 ### Build Options
+
  - **bundlePath**: Output location for a single file version of the flatpak. If
    non supplied, the single file flatpak will not be created.
  - **arch**: The architecture for the flatpak bundle. x86_64, i386 or arm.
@@ -120,6 +101,23 @@ supported.
  - **subject**: The single line subject to use for the flatpak repo commit
    message.
  - **body**: The description to use for the flatpak repo commit message.
+ - **files**: Files to copy directly into the app. Should be a list of [source,
+   dest] tuples. Source should be a relative/absolute path to a file/directory
+   to copy into the flatpak, and dest should be the path inside the app install
+   prefix (e.g. `/share/applications/`)
+ - **symlinks**: Symlinks to create in the app files. Should be a list of
+   [target, location] symlink tuples. Target can be either a relative or
+   absolute path inside the app install prefix, and location should be a
+   absolute path inside the prefix to create the symlink at.
+ - **extraExports**: Files to export outside of the flatpak sandbox, in addition
+   to the application desktop file, icons and appstream. File basename *must*
+   be prefixed with the app id. Should not be needed for common use.
+ - **runtimeFlatpakref**: A pathname or url to a flatpakref file to use to auto
+   install the runtime.
+ - **sdkFlatpakref**: A pathname or url to a flatpakref file to use to auto
+   install the sdk.
+ - **baseFlatpakref**: A pathname or url to a flatpakref file to use to auto
+   install the base app.
  - **bundleRepoUrl**: Repo url for the single file bundle. Installing the bundle
    will automatically configure a remote for this URL.
  - **extraFlatpakBuilderArgs**: List of extra arguments to pass to the
@@ -155,12 +153,14 @@ try {
     id: 'org.world.Hello',
     runtime: 'org.freedesktop.Platform',
     runtimeVersion: '1.4',
-    runtimeFlatpakref: 'https://raw.githubusercontent.com/endlessm/flatpak-bundler/master/refs/freedesktop-runtime-1.4.flatpakref',
     sdk: 'org.freedesktop.Sdk',
+  }, {
+    bundlePath: 'hello.flatpak',
     files: [
-    ['hello', '/bin/hello']
-    ]
-  }, { bundlePath: 'hello.flatpak' })
+      ['hello', '/bin/hello']
+    ],
+    runtimeFlatpakref: 'https://raw.githubusercontent.com/endlessm/flatpak-bundler/master/refs/freedesktop-runtime-1.4.flatpakref'
+  })
   console.log('Flatpak built successfully')
 } catch (error) {
     console.error('Error building flatpak', error)
@@ -176,18 +176,9 @@ try {
   const finalBuildOptions = await flatpakBundler.bundle({ // Manifest
     id: 'org.world.Hello',
     base: 'io.atom.electron.BaseApp', // Electron base application
-    baseFlatpakref: 'https://s3-us-west-2.amazonaws.com/electron-flatpak.endlessm.com/electron-base-app-master.flatpakref', // So we can auto install the runtime
     runtime: 'org.freedesktop.Platform', // Use the freedesktop runtime
     runtimeVersion: '1.4',
-    runtimeFlatpakref: 'https://raw.githubusercontent.com/endlessm/flatpak-bundler/master/refs/freedesktop-runtime-1.4.flatpakref',
     sdk: 'org.freedesktop.Sdk',
-    files: [
-      [ 'static/linux', '/share/' ], // Desktop file and icons
-      [ packagedFileDir, '/share/bar' ] // Application binaries and assets
-    ],
-    symlinks: [
-      [ '/share/bar/Bar', '/bin/Bar' ] // Create a symlink in /bin to to app executable
-    ],
     finishArgs: [
       '--share=ipc', '--socket=x11', // Allow app to show windows with X11
       '--socket=pulseaudio', // Allow audio output
@@ -199,8 +190,17 @@ try {
     renameIcon: 'hello' // Rename the icon to agree with the app ID so flatpak will export it
   }, { // Build options
     arch: 'x86_64',
+    baseFlatpakref: 'https://s3-us-west-2.amazonaws.com/electron-flatpak.endlessm.com/electron-base-app-master.flatpakref', // So we can auto install the runtime
     bundlePath: 'dist/hello_x86_64.flatpak',
-    gpgSign: '1234ABCD' // GPG key to sign with
+    files: [
+      [ 'static/linux', '/share/' ], // Desktop file and icons
+      [ packagedFileDir, '/share/bar' ] // Application binaries and assets
+    ],
+    gpgSign: '1234ABCD', // GPG key to sign with
+    runtimeFlatpakref: 'https://raw.githubusercontent.com/endlessm/flatpak-bundler/master/refs/freedesktop-runtime-1.4.flatpakref',
+    symlinks: [
+      [ '/share/bar/Bar', '/bin/Bar' ] // Create a symlink in /bin to to app executable
+    ]
   })
   console.log('Flatpak built successfully.')
   console.log(`Build dir and repo in ${finalBuildOptions.workingDir}`)
