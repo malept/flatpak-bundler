@@ -5,7 +5,7 @@ Build [flatpaks](https://flatpak.org/) from Node.js.
 
 Install `@malept/flatpak-bundler`.
 ```shell
-$ npm install @malept/flatpak-bundler -g
+$ npm install @malept/flatpak-bundler
 ```
 
 [Build a flatpak with a Node script](#hello-world).
