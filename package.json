@@ -29,7 +29,7 @@
   "devDependencies": {
     "husky": "^4.2.5",
     "lint-staged": "^10.2.9",
-    "mocha": "^7.0.0",
+    "mocha": "^8.0.1",
     "standard": "^14.0.0"
   },
   "scripts": {
